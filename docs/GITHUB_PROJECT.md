@@ -1,21 +1,37 @@
-# GitHub Issues & Project Roadmap
+# GitHub Issues (detailed)
 
-Track progress at: https://github.com/Durostorum/world-cup
+**Project board:** https://github.com/users/Durostorum/projects/3  
+**Repository:** https://github.com/Durostorum/world-cup
 
-## Milestones
+## Completed (MVP — no issue)
 
-| # | Title | Status |
+- [x] Product plan & build guide
+- [x] UI mocks + Puppeteer screenshots
+- [x] Vite + React + Tailwind scaffold
+- [x] All pages (Home, Matches, Detail, My Bets, Leaderboard, Profile)
+- [x] Knockout bracket on home
+- [x] Flag images on all team names
+- [x] Netlify Functions API (in-memory store for dev)
+- [x] Daily betting window logic + unit tests
+- [x] GitHub Actions CI (build + test)
+- [x] `.env.example` + `.gitignore` (`.env` never committed)
+
+## Open issues
+
+| # | Title | Labels |
 |---|-------|--------|
-| 1 | Project scaffold & tooling | Done |
-| 2 | Frontend pages & components | Done (MVP) |
-| 3 | API layer & in-memory store | Done (MVP) |
-| 4 | Netlify Database & Drizzle | Open |
-| 5 | Netlify Identity auth | Open |
-| 6 | Fixture seed & odds sync | Open |
-| 7 | Scheduled jobs (lock, settle) | Open |
-| 8 | Security hardening & CI | In progress |
-| 9 | Production Netlify deploy | Open |
+| [#1](https://github.com/Durostorum/world-cup/issues/1) | Integrate Netlify Database with Drizzle ORM | database, backend |
+| [#2](https://github.com/Durostorum/world-cup/issues/2) | Implement Netlify Identity authentication | security, backend, frontend |
+| [#3](https://github.com/Durostorum/world-cup/issues/3) | Seed FIFA 2026 fixtures and matchdays | database, backend |
+| [#4](https://github.com/Durostorum/world-cup/issues/4) | Scheduled jobs: lock matchday and settle bets | backend, devops |
+| [#5](https://github.com/Durostorum/world-cup/issues/5) | Odds ingestion from reputable sources | backend |
+| [#6](https://github.com/Durostorum/world-cup/issues/6) | Security hardening pass | security, backend |
+| [#7](https://github.com/Durostorum/world-cup/issues/7) | Netlify production deployment | devops |
+| [#8](https://github.com/Durostorum/world-cup/issues/8) | Expand test coverage for betting rules | testing, backend |
 
-## Issue templates
+## Suggested work order
 
-Each issue includes acceptance criteria and security notes. Labels: `frontend`, `backend`, `database`, `devops`, `security`, `testing`.
+1. #1 Database → #3 Seed data  
+2. #2 Identity  
+3. #4 Lock/settle jobs → #5 Odds  
+4. #6 Security → #8 Tests → #7 Deploy
