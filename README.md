@@ -2,6 +2,8 @@
 
 A Polymarket-inspired prediction pool for the FIFA World Cup 2026. Members use fictional coins to bet on match winners and compete on a public leaderboard.
 
+**Repository:** https://github.com/Durostorum/world-cup
+
 - **Product spec:** [plan.md](./plan.md)
 - **Build guide:** [build.md](./build.md)
 - **UI mocks:** [mock/](./mock/) · [mock-screenshots/](./mock-screenshots/)
