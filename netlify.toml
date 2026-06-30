@@ -1,0 +1,26 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[functions."sync-odds"]
+  schedule = "0 4 * * *"
+
+[functions."lock-matchday"]
+  schedule = "*/15 * * * *"
+
+[functions."settle-matches"]
+  schedule = "0 9 * * *"
