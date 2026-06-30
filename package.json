@@ -1,0 +1,11 @@
+{
+  "name": "world-cup",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "screenshots": "node scripts/capture-screenshots.mjs"
+  },
+  "devDependencies": {
+    "puppeteer": "^24.0.0"
+  }
+}
