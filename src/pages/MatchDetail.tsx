@@ -23,11 +23,24 @@ export function MatchDetailPage() {
     api.getMatch(id).then((r) => {
       setMatch(r.match)
       setHistory(r.betHistory)
+    }).catch(() => {
+      setMatch(null)
+      setMessage('Match not found')
     })
+    if (!user) {
+      setCoinBalance(null)
+      return
+    }
     api.getProfile().then((r) => setCoinBalance(r.user.coinBalance)).catch(() => setCoinBalance(null))
   }, [id, user])
 
-  if (!match) return <p className="text-white">Loading…</p>
+  if (!match) {
+    return (
+      <p className="text-white">
+        {message || 'Loading…'}
+      </p>
+    )
+  }
 
   const odds =
     selectedTeamId === match.teamA.id
@@ -38,7 +51,7 @@ export function MatchDetailPage() {
 
   const teamATotal = history.filter((h) => h.pickedTeam.id === match.teamA.id).reduce((s, h) => s + h.stake, 0)
   const teamBTotal = history.filter((h) => h.pickedTeam.id === match.teamB.id).reduce((s, h) => s + h.stake, 0)
-  const maxStake = coinBalance ?? 10_000
+  const maxStake = coinBalance ?? 0
 
   async function confirmBet() {
     if (!selectedTeamId || !id) return

@@ -1,5 +1,4 @@
 import { BRACKET_LEFT_R32, BRACKET_RIGHT_R32, extraScoresFromResult, type BracketRound, type BracketSeedPair } from './bracket-structure'
-import { stableMatchId } from './match-catalog'
 import type { Match, MatchStatus, Team } from './types'
 
 export interface BracketParticipant {
@@ -58,13 +57,11 @@ function bettingMeta(
   api: Match | undefined,
   teamA: BracketParticipant | null,
   teamB: BracketParticipant | null,
-  fifaMatchNumber?: number,
 ) {
   if (!teamA || !teamB) {
     return { matchId: undefined, bettingOpen: null as boolean | null }
   }
-  const fifa = fifaMatchNumber ?? api?.fifaMatchNumber
-  const matchId = api?.id ?? (fifa != null ? stableMatchId(fifa) : undefined)
+  const matchId = api?.id
   if (!matchId) {
     return { matchId: undefined, bettingOpen: null as boolean | null }
   }
@@ -177,7 +174,7 @@ function resolveR32(
     const teamB = seed.teamB
     const api = findApiMatch(matches, teamA, teamB, seed.fifaMatchNumber)
     const result = mergeResult(api, seed, teamA, teamB)
-    const link = bettingMeta(api, teamA, teamB, seed.fifaMatchNumber)
+    const link = bettingMeta(api, teamA, teamB)
     return {
       id: `${side}-r32-${slotIndex}`,
       round: 'r32',
@@ -225,7 +222,7 @@ function buildDerivedRound(
     const result =
       teamA && teamB ? scoresForTeams(api, teamA, teamB) : { scoreA: null, scoreB: null, extraScoreA: null, extraScoreB: null, status: 'pending' as const, winnerCode: null, loserCode: null }
 
-    const link = bettingMeta(api, teamA, teamB, api?.fifaMatchNumber)
+    const link = bettingMeta(api, teamA, teamB)
     games.push({
       id: `${side}-${round}-${slotIndex}`,
       round,
@@ -262,7 +259,7 @@ function buildCenterGame(
       ? scoresForTeams(api, teamA, teamB)
       : { scoreA: null, scoreB: null, extraScoreA: null, extraScoreB: null, status: 'pending' as const, winnerCode: null, loserCode: null }
 
-  const link = bettingMeta(api, teamA, teamB, api?.fifaMatchNumber)
+  const link = bettingMeta(api, teamA, teamB)
   return {
     id,
     round,

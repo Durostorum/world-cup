@@ -8,5 +8,5 @@ export function oddsToImpliedPercent(odds: number): number {
 }
 
 export function calculatePayout(stake: number, odds: number): number {
-  return Math.floor(stake * odds)
+  return Math.round(stake * odds)
 }
