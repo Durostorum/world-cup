@@ -1,26 +1,54 @@
 import type { Config } from '@netlify/functions'
-import { users } from './shared/store.js'
-import { error, getUserId, handleOptions, json } from './shared/http.js'
 
-export default async (req: Request) {
-  const opt = handleOptions(req)
-  if (opt) return opt
+import { error, json, requireAuth, withApiHandler } from './shared/http.js'
 
-  if (req.method !== 'GET') return error('Method not allowed', 405)
+import { ensureUser, maskEmail } from './shared/users.js'
 
-  const userId = getUserId(req)
-  const user = users.find((u) => u.id === userId)
-  if (!user) return error('User not found', 404)
 
-  const { email, ...safe } = user
-  return json({
+
+export default withApiHandler(async (req: Request) => {
+
+  if (req.method !== 'GET') return error(req, 'Method not allowed', 405)
+
+
+
+  const auth = await requireAuth(req)
+
+  if (auth instanceof Response) return auth
+
+
+
+  const user = await ensureUser({ id: auth.id, email: auth.email })
+
+
+
+  return json(req, {
+
     user: {
-      ...safe,
-      email: email.replace(/(.{2}).+(@.*)/, '$1***$2'),
+
+      id: user.id,
+
+      email: maskEmail(user.email),
+
+      displayName: user.displayName,
+
+      coinBalance: user.coinBalance,
+
+      totalPredictions: user.totalPredictions,
+
+      correctPredictions: user.correctPredictions,
+
     },
+
   })
-}
+
+})
+
+
 
 export const config: Config = {
-  path: '/profile',
+
+  path: '/api/profile',
+
 }
+

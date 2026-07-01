@@ -1,17 +1,40 @@
 import type { Config } from '@netlify/functions'
-import { getLeaderboard } from './shared/store.js'
-import { error, getUserId, handleOptions, json } from './shared/http.js'
 
-export default async (req: Request) {
-  const opt = handleOptions(req)
-  if (opt) return opt
+import { error, json, optionalAuth, withApiHandler } from './shared/http.js'
 
-  if (req.method !== 'GET') return error('Method not allowed', 405)
+import { getLeaderboard } from './shared/queries.js'
 
-  const userId = getUserId(req)
-  return json({ entries: getLeaderboard(userId) })
-}
+import { ensureUser } from './shared/users.js'
+
+
+
+export default withApiHandler(async (req: Request) => {
+
+  if (req.method !== 'GET') return error(req, 'Method not allowed', 405)
+
+
+
+  const auth = await optionalAuth(req)
+
+  if (auth) {
+
+    await ensureUser({ id: auth.id, email: auth.email })
+
+  }
+
+
+
+  const entries = await getLeaderboard(auth?.id ?? '')
+
+  return json(req, { entries })
+
+})
+
+
 
 export const config: Config = {
-  path: '/leaderboard',
+
+  path: '/api/leaderboard',
+
 }
+
