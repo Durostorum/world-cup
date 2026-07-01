@@ -5,23 +5,27 @@ import type { LeaderboardEntry } from '../lib/types'
 
 export function LeaderboardPage() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([])
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.getLeaderboard().then((r) => setEntries(r.entries))
+    api
+      .getLeaderboard()
+      .then((r) => setEntries(r.entries))
+      .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load leaderboard'))
+      .finally(() => setLoading(false))
   }, [])
 
   return (
     <>
       <h1 className="mb-1 text-3xl font-bold text-white">Leaderboard</h1>
       <p className="mb-6 text-white/65">Ranked by coin balance · Updated after daily settlement</p>
-      <div className="mb-5 flex flex-wrap gap-2">
-        {['All time', 'Group stage', 'Knockout'].map((label, i) => (
-          <span key={label} className={`rounded-full px-3 py-1.5 text-sm ${i === 0 ? 'bg-gold font-semibold text-gray-900' : 'bg-white/10 text-white'}`}>
-            {label}
-          </span>
-        ))}
-      </div>
-      <LeaderboardTable entries={entries} />
+      {error && <p className="mb-4 rounded-xl bg-red-500/20 p-4 text-white">{error}</p>}
+      {loading ? (
+        <p className="rounded-xl bg-white/10 p-4 text-white/80">Loading leaderboard…</p>
+      ) : (
+        <LeaderboardTable entries={entries} />
+      )}
     </>
   )
 }

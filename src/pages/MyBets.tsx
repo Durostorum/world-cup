@@ -13,9 +13,12 @@ const statusClass: Record<Bet['status'], string> = {
 
 export function MyBetsPage() {
   const [bets, setBets] = useState<Bet[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.getBets().then((r) => setBets(r.bets))
+    api.getBets()
+      .then((r) => setBets(r.bets))
+      .finally(() => setLoading(false))
   }, [])
 
   const grouped = {
@@ -29,28 +32,34 @@ export function MyBetsPage() {
       <h1 className="mb-1 text-3xl font-bold text-white">My Bets</h1>
       <p className="mb-6 text-white/65">Open bets can be increased until today&apos;s first kickoff (ET)</p>
 
-      {(['open', 'locked', 'settled'] as const).map((key) => (
-        grouped[key].length > 0 && (
-          <div key={key}>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-gold-light">{key}</p>
-            {grouped[key].map((bet) => (
-              <div key={bet.id} className="mb-3 flex items-center justify-between rounded-2xl bg-white p-4 shadow">
-                <div>
-                  <Link to={`/matches/${bet.matchId}`} className="font-semibold hover:underline">
-                    <TeamFlag fifaCode={bet.pickedTeam.fifaCode} name={bet.pickedTeam.name} />
-                  </Link>
-                  <p className="mt-1 text-sm text-gray-500">
-                    {bet.stake} coins {bet.oddsAtLock ? `@ ${bet.oddsAtLock}` : ''}
-                  </p>
-                </div>
-                <span className={`rounded-full px-2 py-1 text-xs font-semibold capitalize ${statusClass[bet.status]}`}>
-                  {bet.status}
-                </span>
+      {loading ? (
+        <p className="rounded-xl bg-white/10 p-4 text-white/80">Loading bets…</p>
+      ) : (
+        <>
+          {(['open', 'locked', 'settled'] as const).map((key) => (
+            grouped[key].length > 0 && (
+              <div key={key}>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-gold-light">{key}</p>
+                {grouped[key].map((bet) => (
+                  <div key={bet.id} className="mb-3 flex items-center justify-between rounded-2xl bg-white p-4 shadow">
+                    <div>
+                      <Link to={`/matches/${bet.matchId}`} className="font-semibold hover:underline">
+                        <TeamFlag fifaCode={bet.pickedTeam.fifaCode} name={bet.pickedTeam.name} />
+                      </Link>
+                      <p className="mt-1 text-sm text-gray-500">
+                        {bet.stake} coins {bet.oddsAtLock ? `@ ${bet.oddsAtLock}` : ''}
+                      </p>
+                    </div>
+                    <span className={`rounded-full px-2 py-1 text-xs font-semibold capitalize ${statusClass[bet.status]}`}>
+                      {bet.status}
+                    </span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )
-      ))}
+            )
+          ))}
+        </>
+      )}
     </>
   )
 }
