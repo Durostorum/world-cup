@@ -9,18 +9,22 @@ export const handler: Handler = async (event) => {
     }
     const identityUser = payload.user
     if (!identityUser?.id || !identityUser.email) {
-      return { statusCode: 400, body: 'Missing identity user' }
+      return { statusCode: 200, body: JSON.stringify({}) }
     }
 
-    await ensureUser({
-      id: identityUser.id,
-      email: identityUser.email,
-      displayName: identityUser.user_metadata?.full_name,
-    })
+    try {
+      await ensureUser({
+        id: identityUser.id,
+        email: identityUser.email,
+        displayName: identityUser.user_metadata?.full_name,
+      })
+    } catch (err) {
+      console.error('identity-login ensureUser failed', err)
+    }
 
-    return { statusCode: 200, body: '' }
+    return { statusCode: 200, body: JSON.stringify({}) }
   } catch (err) {
     console.error('identity-login failed', err)
-    return { statusCode: 500, body: 'Failed to provision app user' }
+    return { statusCode: 200, body: JSON.stringify({}) }
   }
 }

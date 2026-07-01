@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { RequireAuth } from './components/RequireAuth'
 import { AuthProvider } from './lib/auth'
+import type { EarlyAuthResult } from './lib/auth-callback'
 import { AuthPage } from './pages/Auth'
 import { HomePage } from './pages/Home'
 import { LeaderboardPage } from './pages/Leaderboard'
@@ -11,9 +12,9 @@ import { MyBetsPage } from './pages/MyBets'
 import { ProfilePage } from './pages/Profile'
 import { ContactPage, PrivacyPage, RulesPage, TermsPage } from './pages/Legal'
 
-export default function App() {
+export default function App({ earlyAuth }: { earlyAuth?: EarlyAuthResult }) {
   return (
-    <AuthProvider>
+    <AuthProvider earlyAuth={earlyAuth}>
       <BrowserRouter>
         <Layout>
           <Routes>

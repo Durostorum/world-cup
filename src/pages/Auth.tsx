@@ -2,7 +2,7 @@ import { FormEvent, useState } from 'react'
 
 import { Navigate, useLocation } from 'react-router-dom'
 
-import { AuthError } from '@netlify/identity'
+import { AuthError, oauthLogin } from '@netlify/identity'
 
 import { useAuth } from '../lib/auth'
 
@@ -67,9 +67,7 @@ export function AuthPage() {
         if (result.needsEmailConfirmation) {
 
           setInfo(
-
-            'Account created. Check your email and click the confirmation link, then return here to sign in.',
-
+            'Account created. Check your email and click the confirmation link — you will be signed in automatically.',
           )
 
           setMode('login')
@@ -219,6 +217,20 @@ export function AuthPage() {
         </button>
 
       </form>
+
+      <div className="my-4 flex items-center gap-3 text-xs text-gray-400">
+        <span className="h-px flex-1 bg-gray-200" />
+        or
+        <span className="h-px flex-1 bg-gray-200" />
+      </div>
+
+      <button
+        type="button"
+        onClick={() => oauthLogin('google')}
+        className="w-full rounded-lg border border-gray-200 py-3 text-sm font-semibold text-pitch hover:bg-gray-50"
+      >
+        Continue with Google
+      </button>
 
       <button
 

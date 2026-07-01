@@ -21,7 +21,7 @@ import {
 } from '@netlify/identity'
 
 import { bootstrapAppUser } from './bootstrap-user'
-
+import type { EarlyAuthResult } from './auth-callback'
 import { syncDevAuthCookie } from './identity-token'
 
 
@@ -66,13 +66,24 @@ function isConfirmed(user: User) {
 
 
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({
+  children,
+  earlyAuth,
+}: {
+  children: React.ReactNode
+  earlyAuth?: EarlyAuthResult
+}) {
 
   const [user, setUser] = useState<User | null>(null)
 
   const [loading, setLoading] = useState(true)
 
-  const [authNotice, setAuthNotice] = useState<string | null>(null)
+  const [authNotice, setAuthNotice] = useState<string | null>(() => {
+    if (earlyAuth?.status === 'confirmed' || earlyAuth?.status === 'error') {
+      return earlyAuth.notice
+    }
+    return null
+  })
 
 
 
@@ -86,7 +97,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       try {
 
-        const callback = await handleAuthCallback()
+        const hashHasToken =
+          typeof window !== 'undefined' && window.location.hash.includes('token')
+
+        const callback = hashHasToken ? await handleAuthCallback() : null
 
         await hydrateSession()
 
@@ -105,6 +119,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(callback.user)
 
           setAuthNotice('Email confirmed — you are signed in.')
+
+          void bootstrapAppUser().catch(() => undefined)
+
+          return
+
+        }
+
+
+
+        if (earlyAuth?.status === 'confirmed' && current && isConfirmed(current)) {
+
+          setUser(current)
 
           void bootstrapAppUser().catch(() => undefined)
 
@@ -144,6 +170,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         }
 
+      } catch (err) {
+        if (!active) return
+        const message =
+          err instanceof Error ? err.message : 'Authentication initialization failed.'
+        if (window.location.hash.includes('confirmation_token')) {
+          setAuthNotice(message)
+        }
       } finally {
 
         if (active) setLoading(false)
@@ -190,7 +223,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     }
 
-  }, [])
+  }, [earlyAuth])
 
 
 
