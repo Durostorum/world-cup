@@ -1,31 +1,59 @@
-import { execSync, spawnSync } from 'node:child_process'
+const DEV_URL = process.env.NETLIFY_DEV_URL ?? 'http://127.0.0.1:8888'
+const MAX_WAIT_MS = 60_000
 
-function localConnectionString() {
-  const out = execSync('npx netlify database connect --json', {
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-  })
-  const parsed = JSON.parse(out)
-  if (!parsed.connection_string) {
-    throw new Error('Netlify database connect did not return a connection_string.')
+async function waitForDev() {
+  const started = Date.now()
+  process.stdout.write(`Waiting for ${DEV_URL} (start npm run dev:local in another terminal)...`)
+
+  while (Date.now() - started < MAX_WAIT_MS) {
+    try {
+      const res = await fetch(`${DEV_URL}/api/matches`)
+      if (res.ok) {
+        process.stdout.write(' ready\n')
+        return true
+      }
+    } catch {
+      // dev server not up yet
+    }
+    process.stdout.write('.')
+    await new Promise((resolve) => setTimeout(resolve, 1000))
   }
-  return parsed.connection_string
+
+  process.stdout.write('\n')
+  return false
+}
+
+async function seedViaDevServer() {
+  const res = await fetch(`${DEV_URL}/api/dev/seed`, { method: 'POST' })
+  const body = await res.text()
+  let parsed
+  try {
+    parsed = JSON.parse(body)
+  } catch {
+    parsed = { error: body || `HTTP ${res.status}` }
+  }
+
+  if (!res.ok) {
+    throw new Error(parsed.error ?? `Seed failed with HTTP ${res.status}`)
+  }
+
+  console.log(`Seed complete: ${parsed.fixtures} fixtures synced.`)
 }
 
 try {
-  const connectionString = localConnectionString()
-  const result = spawnSync('npm', ['run', 'seed'], {
-    stdio: 'inherit',
-    env: { ...process.env, NETLIFY_DB_URL: connectionString },
-    shell: true,
-  })
-  process.exit(result.status ?? 1)
+  const ready = await waitForDev()
+  if (!ready) {
+    console.error(
+      '\nCould not reach the local Netlify dev server.\n' +
+        '• Terminal 1: npm run dev:local\n' +
+        '• Terminal 2: npm run dev:setup\n',
+    )
+    process.exit(1)
+  }
+
+  await seedViaDevServer()
 } catch (err) {
-  console.error(
-    '\nCould not connect to the local Netlify Database.\n' +
-      '• Run `npm run db:migrate` first.\n' +
-      '• Do not set DATABASE_URL in .env unless you run your own Postgres.\n',
-  )
+  console.error('\nSeed failed.')
   console.error(err instanceof Error ? err.message : err)
   process.exit(1)
 }

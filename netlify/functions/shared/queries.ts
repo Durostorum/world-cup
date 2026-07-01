@@ -1,9 +1,11 @@
 import { desc, eq } from 'drizzle-orm'
 import { getDb } from '../../../db/index.js'
 import { matchdays, matches, teams, users } from '../../../db/schema.js'
+import { seedIfEmpty } from './seed-data.js'
 import { toApiMatch } from './mappers.js'
 
 export async function listMatches() {
+  await seedIfEmpty()
   const db = getDb()
   const rows = await db
     .select({
