@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { Match } from '../lib/types'
+import { matchStageLabel } from '../lib/match-utils'
 import { oddsToImpliedPercent } from '../lib/odds'
 import { TeamFlag, TeamFlagOnly } from './TeamFlag'
 
@@ -20,22 +21,35 @@ export function MatchCard({ match, compact, selectedTeamId, onSelectTeam }: Matc
     timeZoneName: 'short',
   })
 
+  const finished = match.status === 'finished'
+  const live = match.status === 'live'
+  const showScores = finished || live
+
   return (
     <div className="mb-4 rounded-2xl bg-white p-5 shadow-lg shadow-pitch/10">
       <div className="mb-3 flex items-center justify-between text-sm text-gray-500">
         <span>
-          <strong className="text-pitch">Group {match.groupCode}</strong> · Match {match.fifaMatchNumber} · {kickoff}
+          <strong className="text-pitch">{matchStageLabel(match)}</strong> · Match {match.fifaMatchNumber} · {kickoff}
         </span>
         {!compact && <span>{match.venue}</span>}
-        {match.bettingOpen ? (
+        {finished ? (
+          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800">Final</span>
+        ) : live ? (
+          <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-800">Live</span>
+        ) : match.bettingOpen ? (
           <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800">Open</span>
         ) : (
           <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900">Locked</span>
         )}
       </div>
-      {!compact && match.bettingOpen && (
+      {!compact && !showScores && match.bettingOpen && (
         <div className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
           ⏱ Betting closes at first kickoff today (Eastern)
+        </div>
+      )}
+      {!compact && !showScores && !match.bettingOpen && (
+        <div className="mb-3 rounded-lg bg-gray-100 px-3 py-2 text-xs font-semibold text-gray-600">
+          Betting closed for this matchday
         </div>
       )}
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
@@ -54,14 +68,18 @@ export function MatchCard({ match, compact, selectedTeamId, onSelectTeam }: Matc
                 <TeamFlagOnly fifaCode={team.fifaCode} />
               </div>
               <div className="mb-2 font-bold">{team.name}</div>
-              {odds != null && (
+              {showScores ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-gray-900 px-3 py-1 text-lg font-bold text-white tabular-nums">
+                  {i === 0 ? (match.scoreA ?? 0) : (match.scoreB ?? 0)}
+                </span>
+              ) : odds != null ? (
                 <>
                   <span className="inline-flex items-center gap-1 rounded-full bg-pitch px-3 py-1 text-sm font-semibold text-white">
                     👍 {odds.toFixed(2)}
                   </span>
                   <div className="mt-1 text-xs text-gray-500">{oddsToImpliedPercent(odds)}% implied</div>
                 </>
-              )}
+              ) : null}
             </button>
           )
           return i === 0 ? [cell, <span key="vs" className="font-extrabold text-gray-400">VS</span>] : [cell]

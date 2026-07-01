@@ -1,16 +1,15 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { KnockoutBracket } from '../components/KnockoutBracket'
 import { MatchCard } from '../components/MatchCard'
-import { api } from '../lib/api'
-import type { Match } from '../lib/types'
+import { filterMatchesByMatchday, formatMatchdayHeading, isShowingUpcomingMatchday, resolveMatchdayDate } from '../lib/match-utils'
+import { useMatches } from '../lib/use-matches'
 
 export function HomePage() {
-  const [matches, setMatches] = useState<Match[]>([])
-
-  useEffect(() => {
-    api.getMatches().then((r) => setMatches(r.matches.slice(0, 2)))
-  }, [])
+  const { matches, error } = useMatches()
+  const matchday = resolveMatchdayDate(matches)
+  const todayMatches = filterMatchesByMatchday(matches, matchday)
+  const showingUpcoming = isShowingUpcomingMatchday(matches)
+  const bettingOpenToday = todayMatches.some((m) => m.bettingOpen)
 
   return (
     <>
@@ -21,16 +20,29 @@ export function HomePage() {
           Fictional coin predictions for FIFA World Cup 2026. Pick winners, bet before the first kickoff each day, and compete with friends.
         </p>
         <div className="relative mt-5 flex gap-3">
-          <Link to="/matches" className="rounded-lg bg-pitch px-5 py-2.5 text-sm font-semibold text-white">Today&apos;s Matches</Link>
-          <Link to="/leaderboard" className="rounded-lg border-2 border-pitch px-5 py-2.5 text-sm font-semibold text-pitch">View Standings</Link>
+          <Link to="/matches" className="rounded-lg bg-pitch px-5 py-2.5 text-sm font-semibold text-white">
+            Today&apos;s Matches
+          </Link>
+          <Link to="/leaderboard" className="rounded-lg border-2 border-pitch px-5 py-2.5 text-sm font-semibold text-pitch">
+            View Standings
+          </Link>
         </div>
       </section>
 
-      <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-gold-light">Knockout stage · Round of 32</p>
-      <KnockoutBracket />
+      <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-gold-light">
+        Knockout bracket · winners advance · semi-final losers play for 3rd
+      </p>
+      <KnockoutBracket matches={matches} />
 
-      <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-gold-light">Upcoming today · Betting closes at first kickoff ET</p>
-      {matches.map((m) => (
+      <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-gold-light">
+        {showingUpcoming ? 'Next matchday' : formatMatchdayHeading(matchday)} ·{' '}
+        {bettingOpenToday ? 'Betting open until first kickoff ET' : 'Betting closed · today\'s matches'}
+      </p>
+      {error && <p className="mb-4 rounded-xl bg-amber-500/20 p-4 text-white">{error}</p>}
+      {todayMatches.length === 0 && !error && (
+        <p className="mb-4 rounded-xl bg-white/10 p-4 text-white/80">No matches scheduled for today.</p>
+      )}
+      {todayMatches.map((m) => (
         <MatchCard key={m.id} match={m} />
       ))}
     </>

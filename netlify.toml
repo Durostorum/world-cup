@@ -7,14 +7,17 @@
   node_bundler = "esbuild"
 
 [[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-
-[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
 
 [functions."sync-odds"]
   schedule = "0 4 * * *"
@@ -24,3 +27,16 @@
 
 [functions."settle-matches"]
   schedule = "0 9 * * *"
+
+# Local dev: netlify dev on :8888 proxies to Vite on :5173 (functions + DB + Identity)
+[dev]
+  command = "npm run dev:vite"
+  targetPort = 5173
+  port = 8888
+  publish = "dist"
+  framework = "#custom"
+
+  [dev.environment]
+    ALLOW_DEMO_AUTH = "true"
+    VITE_USE_MOCK = "false"
+    VITE_ENABLE_DEMO_AUTH = "true"
