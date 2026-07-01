@@ -1,3 +1,5 @@
+import { resolveAuthToken } from './identity-token'
+
 const API_BASE = '/api'
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
@@ -6,10 +8,20 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     const { mockFetch } = await import('./mock-fetch')
     return mockFetch<T>(path, init)
   }
+
+  const authToken = await resolveAuthToken()
+  const demoAuthEnabled = import.meta.env.VITE_ENABLE_DEMO_AUTH === 'true'
+  const demoUserId = import.meta.env.VITE_DEMO_USER_ID as string | undefined
+  const useDemoHeaders = demoAuthEnabled && !authToken && demoUserId
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      ...(useDemoHeaders
+        ? { 'X-User-Id': demoUserId, 'X-User-Email': 'demo@local.dev' }
+        : {}),
       ...init?.headers,
     },
   })
@@ -27,10 +39,7 @@ export const api = {
       `/matches?id=${encodeURIComponent(id)}`,
     ),
   getLeaderboard: () => request<{ entries: import('./types').LeaderboardEntry[] }>('/leaderboard'),
-  getBets: (userId?: string) =>
-    request<{ bets: import('./types').Bet[] }>(
-      userId ? `/bets?userId=${encodeURIComponent(userId)}` : '/bets',
-    ),
+  getBets: () => request<{ bets: import('./types').Bet[] }>('/bets'),
   placeBet: (body: { matchId: string; pickedTeamId: string; stake: number }) =>
     request<{ bet: import('./types').Bet; coinBalance: number }>('/bets', {
       method: 'POST',
